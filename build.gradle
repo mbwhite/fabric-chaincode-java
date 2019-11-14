@@ -7,6 +7,7 @@
 apply plugin: 'idea'
 apply plugin: 'eclipse-wtp'
 version = '2.0.0-SNAPSHOT'
+
 allprojects {
     repositories {
         mavenCentral()

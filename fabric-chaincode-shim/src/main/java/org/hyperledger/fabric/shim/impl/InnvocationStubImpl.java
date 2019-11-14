@@ -51,6 +51,7 @@ import org.hyperledger.fabric.protos.peer.ProposalResponsePackage;
 import org.hyperledger.fabric.protos.peer.TransactionPackage;
 import org.hyperledger.fabric.shim.Chaincode;
 import org.hyperledger.fabric.shim.Chaincode.Response;
+import org.hyperledger.fabric.shim.ChaincodeSpi;
 import org.hyperledger.fabric.shim.ChaincodeStub;
 import org.hyperledger.fabric.shim.ledger.CompositeKey;
 import org.hyperledger.fabric.shim.ledger.KeyModification;
@@ -62,7 +63,7 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Timestamp;
 
-class InnvocationStubImpl implements ChaincodeStub {
+public class InnvocationStubImpl implements ChaincodeStub {
 
     private static final String UNSPECIFIED_KEY = new String(Character.toChars(0x000001));
     private static final Logger logger = Logger.getLogger(InnvocationStubImpl.class.getName());
@@ -77,8 +78,8 @@ class InnvocationStubImpl implements ChaincodeStub {
     private final ByteString creator;
     private final Map<String, ByteString> transientMap;
     private final byte[] binding;
-    private ChaincodeEvent event;
-
+    private ChaincodeEvent event;   
+    
     public InnvocationStubImpl(ChaincodeMessage message, ChaincodeInnvocationTask handler)
             throws InvalidProtocolBufferException {
         this.channelId = message.getChannelId();
@@ -639,5 +640,11 @@ class InnvocationStubImpl implements ChaincodeStub {
         if (collection.isEmpty()) {
             throw new IllegalArgumentException("collection must not be an empty string");
         }
+    }
+    
+    // SPI
+    
+    protected ChaincodeInnvocationTask getHandler() {
+    	return this.handler;
     }
 }

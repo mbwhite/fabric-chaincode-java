@@ -42,4 +42,6 @@ public @interface Property {
      * @return String array of the key-value pairs of the schema
      */
     String[] schema() default {};
+   
+
 }

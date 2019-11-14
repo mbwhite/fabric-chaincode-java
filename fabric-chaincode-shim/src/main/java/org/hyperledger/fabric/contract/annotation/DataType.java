@@ -24,7 +24,13 @@ import java.lang.annotation.Target;
  * <b>FUTURE</b> To take these annotations are also utilize them for leverage storage
  */
 @Retention(RUNTIME)
-@Target(ElementType.TYPE)
+@Target({ElementType.TYPE, ElementType.TYPE_USE})
 public @interface DataType {
+
+	/** Does this type have a namespace to distinguish it from other types
+	 * 
+	 * @return
+	 */
     String namespace() default "";
+    
 }

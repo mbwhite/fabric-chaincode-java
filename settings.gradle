@@ -10,4 +10,4 @@ include 'fabric-chaincode-shim'
 include 'fabric-chaincode-docker'
 include ':examples:fabric-chaincode-example-sacc-jars'
 include 'fabric-chaincode-integration-test'
-
+include ':examples:contract-java'
