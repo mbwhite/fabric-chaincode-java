@@ -80,4 +80,9 @@ public interface TxFunction {
      */
     List<ParameterDefinition> getParamsList();
 
+    /** 
+     * @return true if this a tx function using Thread-local Context
+     * 
+     */
+    boolean isThreadContext();
 }

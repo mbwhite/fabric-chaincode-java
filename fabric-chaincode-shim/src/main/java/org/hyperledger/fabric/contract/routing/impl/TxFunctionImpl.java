@@ -33,12 +33,14 @@ public final class TxFunctionImpl implements TxFunction {
     private TypeSchema returnSchema;
     private List<ParameterDefinition> paramsList = new ArrayList<>();
     private boolean isUnknownTx;
+    private boolean isThreadContext = true;
 
     public final class RoutingImpl implements Routing {
 
         private final Method method;
         private final Class<? extends ContractInterface> clazz;
         private final String serializerName;
+
 
         /**
          *
@@ -116,38 +118,44 @@ public final class TxFunctionImpl implements TxFunction {
         final List<java.lang.reflect.Parameter> params = new ArrayList<java.lang.reflect.Parameter>(
                 Arrays.asList(method.getParameters()));
 
-        // validate the first one is a context object
-        if (!Context.class.isAssignableFrom(params.get(0).getType())) {
-            throw new ContractRuntimeException(
-                    "First argument should be of type Context " + method.getName() + " " + params.get(0).getType());
-        } else {
+        if (!params.isEmpty()){
 
-            params.remove(0);
-        }
+            // FUTURE: if ever the method of creating the instance where to change,
+            // the routing could be changed here, a different implementation could be made
+            // here encapsulating the change. eg use an annotation to define where the
+            // context goes
 
-        // FUTURE: if ever the method of creating the instance where to change,
-        // the routing could be changed here, a different implementation could be made
-        // here encapsulating the change. eg use an annotation to define where the
-        // context goes
-
-        for (final java.lang.reflect.Parameter parameter : params) {
-            final TypeSchema paramMap = new TypeSchema();
-            final TypeSchema schema = TypeSchema.typeConvert(parameter.getType());
-
-            final Property annotation = parameter.getAnnotation(org.hyperledger.fabric.contract.annotation.Property.class);
-            if (annotation != null) {
-                final String[] userSupplied = annotation.schema();
-                for (int i = 0; i < userSupplied.length; i += 2) {
-                    schema.put(userSupplied[i], userSupplied[i + 1]);
+            for (int pi = 0; pi< params.size(); pi++) {
+                java.lang.reflect.Parameter parameter = params.get(pi);
+                if (Context.class.isAssignableFrom(parameter.getType())){
+                    if (pi > 0 ){
+                    throw new ContractRuntimeException(
+                        "If Context is used is must be the first argument, not at position "+pi);
+                    } else {
+                        this.isThreadContext = false;
+                        continue;
+                    }
                 }
+
+                final TypeSchema paramMap = new TypeSchema();
+                final TypeSchema schema = TypeSchema.typeConvert(parameter.getType());
+
+                final Property annotation = parameter.getAnnotation(org.hyperledger.fabric.contract.annotation.Property.class);
+                if (annotation != null) {
+                    final String[] userSupplied = annotation.schema();
+                    for (int i = 0; i < userSupplied.length; i += 2) {
+                        schema.put(userSupplied[i], userSupplied[i + 1]);
+                    }
+                }
+
+                paramMap.put("name", parameter.getName());
+                paramMap.put("schema", schema);
+                final ParameterDefinition pd = new ParameterDefinitionImpl(parameter.getName(), parameter.getClass(), paramMap,
+                        parameter);
+                paramsList.add(pd);
             }
 
-            paramMap.put("name", parameter.getName());
-            paramMap.put("schema", schema);
-            final ParameterDefinition pd = new ParameterDefinitionImpl(parameter.getName(), parameter.getClass(), paramMap,
-                    parameter);
-            paramsList.add(pd);
-        }
+        }        
     }
 
     @Override
@@ -219,4 +227,11 @@ public final class TxFunctionImpl implements TxFunction {
         this.isUnknownTx = unknown;
     }
 
+    /** 
+     * @return true if this a tx function using Thread-local Context
+     * 
+     */
+    public boolean isThreadContext(){
+        return this.isThreadContext;
+    }
 }

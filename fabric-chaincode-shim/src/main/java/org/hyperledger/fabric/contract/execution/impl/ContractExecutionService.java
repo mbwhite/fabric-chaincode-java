@@ -55,7 +55,9 @@ public class ContractExecutionService implements ExecutionService {
             final Context context = contractObject.createContext(stub);
 
             final List<Object> args = convertArgs(req.getArgs(), txFn);
-            args.add(0, context); // force context into 1st position, other elements move up
+            if (!txFn.isThreadContext()){
+                args.add(0, context); // force context into 1st position, other elements move up
+            }
 
             contractObject.beforeTransaction(context);
             final Object value = rd.getMethod().invoke(contractObject, args.toArray());
@@ -94,6 +96,13 @@ public class ContractExecutionService implements ExecutionService {
     private List<Object> convertArgs(final List<byte[]> stubArgs, final TxFunction txFn) {
 
         final List<ParameterDefinition> schemaParams = txFn.getParamsList();
+        int sizeSupplied = stubArgs.size();
+        int sizeRequired = schemaParam.size();
+
+        if (sizeRequired!=sizeSupplied) {
+            throw new ContractRuntimeException("Expected "+sizeRequired+" arguments, but got "+sizeSuppled);
+        }
+
         final List<Object> args = new ArrayList<>(stubArgs.size() + 1); // allow for context as the first argument
         for (int i = 0; i < schemaParams.size(); i++) {
             args.add(i, serializer.fromBuffer(stubArgs.get(i), schemaParams.get(i).getSchema()));

@@ -55,6 +55,8 @@ public class Context {
         this.stub = stub;
         try {
             this.clientIdentity = new ClientIdentity(stub);
+
+            Context.threadContext.set(this);
         } catch (CertificateException | JSONException | IOException e) {
             throw new ContractRuntimeException("Could not create new client identity", e);
         }
@@ -74,5 +76,12 @@ public class Context {
      */
     public ClientIdentity getClientIdentity() {
         return this.clientIdentity;
+    }
+
+    private static ThreadLocal<Context> threadContext = new ThreadLocal<Context>();
+
+    public static Context getContext(){
+        Context ctx = threadContext.get();
+        return ctx;
     }
 }
